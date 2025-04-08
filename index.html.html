@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Margen Operativo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; padding: 0; }
+    input { width: 100%; padding: 8px; margin-bottom: 10px; }
+    label { font-weight: bold; }
+    .result { margin-top: 20px; padding: 10px; background-color: #f2f2f2; border-radius: 5px; color: green; font-weight: bold; }
+    .save { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Calculadora de Margen Operativo INOLSA</h2>
+  <form id="calcForm">
+    <label>Toneladas de soya a procesar:</label>
+    <input type="number" id="tn" value="1" step="any">
+
+    <label>Tipo de cambio oficial (Bs/USD):</label>
+    <input type="number" id="tc_oficial" value="6.96" step="any">
+
+    <label>Tipo de cambio blue (Bs/USD):</label>
+    <input type="number" id="tc_blue" value="10.5" step="any">
+
+    <label>Rendimiento Harina (%):</label>
+    <input type="number" id="rend_harina" value="74" step="any">
+
+    <label>Rendimiento Aceite (%):</label>
+    <input type="number" id="rend_aceite" value="19.5" step="any">
+
+    <label>Rendimiento Cascarilla (%):</label>
+    <input type="number" id="rend_cascarilla" value="3" step="any">
+
+    <label>Precio Harina Exportación (USD/TN):</label>
+    <input type="number" id="precio_harina" value="330" step="any">
+
+    <label>Precio Aceite Exportación (USD/TN):</label>
+    <input type="number" id="precio_aceite" value="965" step="any">
+
+    <label>Precio Cascarilla Nacional (USD/TN):</label>
+    <input type="number" id="precio_cascarilla" value="80" step="any">
+
+    <label>Costo del grano (USD/TN):</label>
+    <input type="number" id="costo_grano" value="600" step="any">
+
+    <label>Costos operativos (USD/TN):</label>
+    <input type="number" id="costos_operativos" value="25" step="any">
+
+    <button type="button" onclick="calcular()">Calcular</button>
+  </form>
+
+  <div class="result" id="result"></div>
+
+  <button class="save" onclick="guardarDatos()">Guardar datos</button>
+
+  <script>
+    function formatNumber(num) {
+      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function calcular() {
+      const tn = parseFloat(document.getElementById('tn').value);
+      const tc_oficial = parseFloat(document.getElementById('tc_oficial').value);
+      const tc_blue = parseFloat(document.getElementById('tc_blue').value);
+      const rend_harina = parseFloat(document.getElementById('rend_harina').value) / 100;
+      const rend_aceite = parseFloat(document.getElementById('rend_aceite').value) / 100;
+      const rend_cascarilla = parseFloat(document.getElementById('rend_cascarilla').value) / 100;
+      const precio_harina = parseFloat(document.getElementById('precio_harina').value);
+      const precio_aceite = parseFloat(document.getElementById('precio_aceite').value);
+      const precio_cascarilla = parseFloat(document.getElementById('precio_cascarilla').value);
+      const costo_grano = parseFloat(document.getElementById('costo_grano').value);
+      const costos_operativos = parseFloat(document.getElementById('costos_operativos').value);
+
+      const harina_bs = tn * rend_harina * precio_harina * tc_blue;
+      const aceite_bs = tn * rend_aceite * precio_aceite * tc_blue;
+      const cascarilla_bs = tn * rend_cascarilla * precio_cascarilla * tc_oficial;
+
+      const ingresos_bs = harina_bs + aceite_bs + cascarilla_bs;
+      const ingresos_usd = ingresos_bs / tc_oficial;
+
+      const costos_usd = tn * (costo_grano + costos_operativos);
+      const margen_operativo_usd = ingresos_usd - costos_usd;
+
+      document.getElementById('result').innerHTML = `
+        <div>
+        Resultados:<br>
+        Ingreso total (Bs): ${formatNumber(ingresos_bs)}<br>
+        Ingreso total (USD a TC oficial): ${formatNumber(ingresos_usd)}<br>
+        Costos totales (USD): ${formatNumber(costos_usd)}<br>
+        Margen Operativo (USD): ${formatNumber(margen_operativo_usd)}
+        </div>
+      `;
+    }
+
+    function guardarDatos() {
+      const datos = {
+        tn: document.getElementById('tn').value,
+        tc_oficial: document.getElementById('tc_oficial').value,
+        tc_blue: document.getElementById('tc_blue').value,
+        rend_harina: document.getElementById('rend_harina').value,
+        rend_aceite: document.getElementById('rend_aceite').value,
+        rend_cascarilla: document.getElementById('rend_cascarilla').value,
+        precio_harina: document.getElementById('precio_harina').value,
+        precio_aceite: document.getElementById('precio_aceite').value,
+        precio_cascarilla: document.getElementById('precio_cascarilla').value,
+        costo_grano: document.getElementById('costo_grano').value,
+        costos_operativos: document.getElementById('costos_operativos').value
+      };
+      localStorage.setItem('calculadoraMargenOperativo', JSON.stringify(datos));
+      alert("Datos guardados en este dispositivo.");
+    }
+
+    window.onload = function () {
+      const guardados = localStorage.getItem('calculadoraMargenOperativo');
+      if (guardados) {
+        const datos = JSON.parse(guardados);
+        for (let key in datos) {
+          if (document.getElementById(key)) {
+            document.getElementById(key).value = datos[key];
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
